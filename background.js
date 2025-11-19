@@ -87,7 +87,6 @@ function startSession(tabId, url) {
   currentSession.startTime = Date.now();
 }
 
-// When the active tab changes
 chrome.tabs.onActivated.addListener(activeInfo => {
   endSession();
 
@@ -100,7 +99,6 @@ chrome.tabs.onActivated.addListener(activeInfo => {
   });
 });
 
-// When a tab finishes loading or navigates to a new URL
 chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
   if (!tab.active || !tab.url || changeInfo.status !== "complete") {
     return;
