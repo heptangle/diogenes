@@ -1,6 +1,7 @@
+const api = typeof chrome !== "undefined" ? chrome : browser;
+const KWH_PER_PROMPT = 0.0005;   // 0.5 Wh per prompt
+const CO2_PER_KWH = 0.4;         // kg CO2 per kWh
 
-const KWH_PER_PROMPT = 0.0005;
-const CO2_PER_KWH = 0.4;        
 function formatKwh(kwh) {
   if (kwh < 0.01) {
     return `${(kwh * 1000).toFixed(1)} Wh`;
@@ -76,33 +77,31 @@ function renderStats(dailyUsage) {
   const avgPromptText = formatPrompts(Math.round(monthStats.avgPrompts));
 
   document.getElementById("today-time").textContent =
-    `Prompts. ${todayPromptText}`;
+    `Prompts: ${todayPromptText}`;
   document.getElementById("today-kwh").textContent =
-    `Energy. ${formatKwh(todayKwh)}`;
+    `Energy: ${formatKwh(todayKwh)}`;
   document.getElementById("today-co2").textContent =
-    `Emissions. ${formatKg(todayCo2)}`;
+    `Emissions: ${formatKg(todayCo2)}`;
 
   document.getElementById("total-time").textContent =
-    `Prompts. ${totalPromptText}`;
+    `Prompts: ${totalPromptText}`;
   document.getElementById("total-kwh").textContent =
-    `Energy. ${formatKwh(totalKwh)}`;
+    `Energy: ${formatKwh(totalKwh)}`;
   document.getElementById("total-co2").textContent =
-    `Emissions. ${formatKg(totalCo2)}`;
+    `Emissions: ${formatKg(totalCo2)}`;
 
   document.getElementById("month-kwh").textContent =
-    `Energy. ${formatKwh(monthStats.kwh)} per day`;
+    `Energy: ${formatKwh(monthStats.kwh)} per day`;
   document.getElementById("month-co2").textContent =
-    `Emissions. ${formatKg(monthStats.co2)} per day`;
+    `Emissions: ${formatKg(monthStats.co2)} per day`;
 
   const assumptionsEl = document.getElementById("assumptions");
-  if (assumptionsEl) {
-    assumptionsEl.textContent =
-      `Assumptions. ${KWH_PER_PROMPT} kWh per prompt. ${CO2_PER_KWH} kg CO₂ per kWh.`;
-  }
+  assumptionsEl.textContent =
+    `Assumptions. ${KWH_PER_PROMPT} kWh per prompt. ${CO2_PER_KWH} kg CO₂ per kWh.`;
 }
 
 function initPopup() {
-  chrome.storage.local.get(["dailyUsage"], data => {
+  api.storage.local.get(["dailyUsage"], data => {
     const dailyUsage = data.dailyUsage || {};
     renderStats(dailyUsage);
   });
