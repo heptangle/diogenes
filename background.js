@@ -1,13 +1,7 @@
-const AI_DOMAINS = [
-  "openai.com",
-  "chatgpt.com",
-  "claude.ai",
-  "gemini.google.com",
-  "perplexity.ai",
-  "copilot.microsoft.com"
-];
+const api = typeof chrome !== "undefined" ? chrome : browser;
+
 function getDayKey(date) {
-  return date.toISOString().slice(0, 10);
+  return date.toISOString().slice(0, 10); // YYYY-MM-DD
 }
 
 function normaliseHostname(hostname) {
@@ -22,7 +16,7 @@ function recordPrompt(hostname, charCount) {
   const today = new Date();
   const dayKey = getDayKey(today);
 
-  chrome.storage.local.get(["dailyUsage"], data => {
+  api.storage.local.get(["dailyUsage"], data => {
     const dailyUsage = data.dailyUsage || {};
     const dayData = dailyUsage[dayKey] || {
       prompts: 0,
@@ -39,16 +33,15 @@ function recordPrompt(hostname, charCount) {
 
     dailyUsage[dayKey] = dayData;
 
-    chrome.storage.local.set({ dailyUsage });
+    api.storage.local.set({ dailyUsage });
   });
 }
-chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+api.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (!message || message.type !== "prompt_sent") {
     return;
   }
 
   let hostname = message.hostname;
-
   if (!hostname && sender && sender.tab && sender.tab.url) {
     try {
       hostname = new URL(sender.tab.url).hostname;
@@ -65,7 +58,9 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     sendResponse({ ok: true });
   }
 });
-chrome.runtime.onInstalled.addListener(() => {
+
+api.runtime.onInstalled.addListener(() => {
 });
-chrome.runtime.onStartup.addListener(() => {
+
+api.runtime.onStartup.addListener(() => {
 });
