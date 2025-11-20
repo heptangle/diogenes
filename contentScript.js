@@ -1,3 +1,5 @@
+const api = typeof chrome !== "undefined" ? chrome : browser;
+
 let lastPromptTime = 0;
 const PROMPT_DEBOUNCE_MS = 1000;
 
@@ -11,7 +13,9 @@ function isTextInput(element) {
   if (tag === "TEXTAREA") return true;
   if (tag === "INPUT") {
     const type = (element.type || "").toLowerCase();
-    return type === "text" || type === "search" || type === "email" || type === "url";
+    if (type === "text" || type === "search" || type === "email" || type === "url") {
+      return true;
+    }
   }
   return false;
 }
@@ -25,7 +29,9 @@ function getCurrentTextValue(target) {
     if (ta && ta.value) {
       return ta.value;
     }
-  } catch (e) {}
+  } catch (e) {
+    // ignore
+  }
   return "";
 }
 
@@ -38,27 +44,34 @@ function sendPromptEvent(source) {
 
   const text = getCurrentTextValue(document.activeElement);
   const charCount = text.length;
-
   const hostname = window.location.hostname;
 
-  chrome.runtime.sendMessage({
-    type: "prompt_sent",
-    hostname,
-    charCount,
-    source
-  });
+  try {
+    api.runtime.sendMessage(
+      {
+        type: "prompt_sent",
+        hostname,
+        charCount,
+        source
+      },
+      () => {
+        // ignore response
+      }
+    );
+  } catch (e) {
+    // ignore
+  }
 }
-document.addEventListener("keydown", function (event) {
-  if (event.key !== "Enter" || event.shiftKey) {
-    return;
-  }
 
-  if (!isTextInput(event.target)) {
-    return;
-  }
+document.addEventListener("keydown", function (event) {
+  if (event.key !== "Enter") return;
+  if (event.shiftKey) return;
+
+  if (!isTextInput(event.target)) return;
 
   sendPromptEvent("enter_key");
 });
+
 document.addEventListener("click", function (event) {
   const target = event.target;
   if (!(target instanceof HTMLElement)) {
